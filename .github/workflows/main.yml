@@ -1,0 +1,43 @@
+name: Build GG Digital Mixer APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode proyek
+        uses: actions/checkout@v4
+
+      - name: Siapkan Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Berikan izin Gradle
+        run: chmod +x gradlew
+        if: ${{ hashFiles('gradlew') != '' }}
+
+      - name: Bangun APK Android
+        run: |
+          if [ -f gradlew ]; then
+            ./gradlew assembleDebug
+          elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+            gradle assembleDebug
+          else
+            echo "File proyek Gradle tidak ditemukan."
+            exit 1
+          fi
+
+      - name: Simpan hasil APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GG-Digital-Mixer-APK
+          path: '**/build/outputs/apk/**/*.apk'
+          if-no-files-found: error
